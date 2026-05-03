@@ -36,8 +36,11 @@ Physical Distribution: Kenan Ateş and Eren Berkay Gün
 Project Barcode: BN-2026-VAKA
 
 Release Date:
+
 -Web Digital Edition: 25-04-2026
+
 -PDF Digital Edition: 25-04-2026
+
 -PDF Physical Edition: 28-04-2026
 
 2026, Kenan Ateş. All rights reserved.
