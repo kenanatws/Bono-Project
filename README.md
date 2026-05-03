@@ -39,6 +39,8 @@ Release Date:
 
 -Web Digital Edition: 25-04-2026
 
+-Web Re-issue: 04-05-2026
+
 -PDF Digital Edition: 25-04-2026
 
 -PDF Physical Edition: 28-04-2026
