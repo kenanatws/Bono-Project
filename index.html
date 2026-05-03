@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bono Olay Şeması</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
+
+:root {
+  --paper:   #fdfaf1;
+  --paper-d: #f4edd8;
+  --ink:     #2c241e;
+  --ink-lt:  #7a6a58;
+  --gold:    #a67c52;
+  --gold-lt: #c9aa82;
+  --border:  #d4c5b3;
+  --alert:   #8b0000;
+  --ok:      #2e4d2a;
+  --shadow:  rgba(44,36,30,.14);
+  --note-bg: #f9f4eb;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #e5ddd3;
+  font-family: 'Montserrat', sans-serif;
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 16px 60px;
+  min-height: 100vh;
+}
+
+/* ── Bildirim toast ── */
+#toast {
+  position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px);
+  background: var(--ink); color: #fff; padding: 12px 28px; border-radius: 3px;
+  font-size: 12px; letter-spacing: .04em; font-weight: 600; z-index: 999;
+  transition: transform .35s cubic-bezier(.4,0,.2,1);
+  box-shadow: 0 4px 18px rgba(0,0,0,.25); white-space: nowrap;
+}
+#toast.show { transform: translateX(-50%) translateY(0); }
+#toast.toast-warn { background: var(--alert); }
+#toast.toast-ok   { background: var(--ok); }
+
+/* ── Denetim paneli ── */
+.audit-panel {
+  width: 100%; max-width: 860px;
+  background: #fff; border: 1px solid var(--border); border-radius: 4px;
+  padding: 16px 18px; margin-bottom: 24px;
+  box-shadow: 0 4px 16px var(--shadow);
+}
+.audit-title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .12em; color: var(--gold);
+  border-bottom: 1px solid #eee; padding-bottom: 8px; margin-bottom: 12px;
+}
+.audit-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.audit-row:last-child { margin-bottom: 0; }
+
+.btn {
+  padding: 9px 14px; border: 1px solid var(--border);
+  background: #fff; cursor: pointer; border-radius: 2px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--ink);
+  transition: background .2s, color .2s, border-color .2s;
+  white-space: nowrap;
+}
+.btn:hover   { border-color: var(--gold); background: #faf6f0; }
+.btn.active  { background: var(--gold); color: #fff; border-color: var(--gold); }
+.btn-dark    { background: var(--ink); color: #fff; border-color: var(--ink); }
+.btn-dark:hover { background: #3e342c; }
+.btn-danger  { color: var(--alert); border-color: #d4b0b0; }
+.btn-danger.active { background: var(--alert); color: #fff; border-color: var(--alert); }
+.btn-reset   { background: #6b6058; color: #fff; border-color: transparent; width: 100%; }
+.btn-reset:hover { background: #55493f; }
+select.btn   { cursor: pointer; flex: 1 1 160px; }
+
+/* ── Bono konteyneri ── */
+.bono-wrap {
+  width: 100%; max-width: 820px;
+  background: var(--paper); border: 2px solid var(--border); border-radius: 2px;
+  padding: 44px 50px 38px; position: relative;
+  box-shadow: 0 12px 32px var(--shadow);
+  margin-bottom: 28px;
+  transition: background .4s;
+}
+
+/* Geçerlilik etiketi */
+.validity-tag {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  padding: 5px 28px; font-size: 9.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+  border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;
+  z-index: 20; transition: background .3s;
+}
+.tag-valid   { background: var(--ok); color: #fff; }
+.tag-invalid { background: var(--alert); color: #fff; }
+
+/* Watermark */
+.watermark {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%) rotate(-30deg);
+  font-family: 'Libre Baskerville', serif; font-size: 120px;
+  color: rgba(166,124,82,.04); pointer-events: none;
+  user-select: none; white-space: nowrap; letter-spacing: .08em;
+}
+
+/* Protesto damgası */
+.protest-stamp {
+  position: absolute; top: 58px; right: 48px;
+  border: 3px double var(--alert); padding: 10px 20px;
+  color: var(--alert); font-weight: 900; font-size: 20px;
+  letter-spacing: .1em; transform: rotate(12deg);
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s;
+}
+.protest-stamp.visible { opacity: .75; }
+
+/* Köşe süsleri */
+.corner { position: absolute; width: 14px; height: 14px; border-color: var(--border); border-style: solid; }
+.c-tl { top:10px; left:10px; border-width: 1.5px 0 0 1.5px; }
+.c-tr { top:10px; right:10px; border-width: 1.5px 1.5px 0 0; }
+.c-bl { bottom:10px; left:10px; border-width: 0 0 1.5px 1.5px; }
+.c-br { bottom:10px; right:10px; border-width: 0 1.5px 1.5px 0; }
+
+/* ── Bono içerikleri ── */
+.bono-content {
+  opacity: 0; pointer-events: none; position: absolute; width: calc(100% - 100px);
+  transition: opacity .35s ease;
+}
+.bono-content.active { opacity: 1; pointer-events: auto; position: relative; width: 100%; }
+
+/* Ön yüz */
+.bono-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  border-bottom: 1.5px solid var(--gold); padding-bottom: 14px; margin-bottom: 26px;
+}
+.bono-title { font-family: 'Libre Baskerville', serif; font-size: 34px; color: var(--gold); line-height: 1; }
+.bono-sub   { font-size: 9px; color: var(--ink-lt); letter-spacing: .12em; text-transform: uppercase; margin-top: 5px; }
+.bono-meta  { text-align: right; font-size: 12px; line-height: 1.7; }
+
+.amount-row {
+  display: flex; align-items: stretch;
+  border: 1.5px solid var(--border); margin-bottom: 8px;
+  background: rgba(166,124,82,.04);
+}
+.currency { font-family: 'Libre Baskerville', serif; font-size: 22px; padding: 12px 20px; border-right: 1.5px solid var(--border); background: var(--border); color: #fff; display: flex; align-items: center; }
+.amt-val  { font-size: 26px; padding: 12px 20px; flex: 1; letter-spacing: .04em; font-family: 'Libre Baskerville', serif; }
+.amt-words { font-size: 11px; font-style: italic; color: var(--ink-lt); margin-bottom: 20px; padding-left: 2px; }
+.amt-words b { font-style: normal; color: var(--ink); }
+
+.legal-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); margin-bottom: 22px; }
+.legal-cell { padding: 11px 16px; border: 0.5px solid var(--border); }
+.addr-cell  { grid-column: span 2; padding: 11px 16px; border: 0.5px solid var(--border); }
+.legal-label { font-size: 8.5px; color: var(--ink-lt); text-transform: uppercase; letter-spacing: .12em; margin-bottom: 4px; }
+.legal-val   { font-size: 14px; font-weight: 600; font-family: 'Libre Baskerville', serif; }
+
+.promise-text {
+  font-family: 'Libre Baskerville', serif; font-size: 15px; line-height: 1.9;
+  text-align: justify; margin-bottom: 36px;
+  padding: 14px 18px; background: var(--paper-d);
+  border-left: 3px solid var(--gold); border-radius: 0 3px 3px 0;
+}
+.promise-text b { color: var(--gold); }
+
+.sig-section { display: flex; justify-content: flex-end; margin-top: 10px; }
+.sig-box { width: 240px; text-align: center; transition: opacity .3s; }
+.sig-line { border-bottom: 1px dashed var(--ink); margin-bottom: 8px; height: 44px; }
+.sig-name { font-size: 13px; font-weight: 600; font-family: 'Libre Baskerville', serif; }
+.sig-label { font-size: 8.5px; color: var(--ink-lt); text-transform: uppercase; letter-spacing: .1em; margin-top: 4px; }
+
+/* ── Arka yüz – ciro ── */
+.back-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 1.5px solid var(--gold); padding-bottom: 12px; margin-bottom: 20px;
+}
+.back-title { font-family: 'Libre Baskerville', serif; font-size: 24px; color: var(--ink); }
+.back-sub   { font-size: 9px; color: var(--ink-lt); letter-spacing: .1em; text-transform: uppercase; }
+
+.ciro-list { display: flex; flex-direction: column; gap: 12px; }
+.ciro-item {
+  background: var(--note-bg); border: 1px solid var(--border);
+  border-left: 6px solid var(--gold); padding: 16px 18px; border-radius: 0 3px 3px 0;
+  animation: slideIn .3s ease;
+}
+.ciro-broken { border-left-color: var(--alert) !important; background: #fff6f6; }
+@keyframes slideIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
+
+.ciro-meta   { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.ciro-num    { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--gold); }
+.ciro-num.red { color: var(--alert); }
+.ciro-tag    { font-size: 8px; background: var(--paper-d); border: 1px solid var(--border); border-radius: 2px; padding: 2px 7px; color: var(--ink-lt); letter-spacing: .06em; }
+.ciro-text   { font-family: 'Libre Baskerville', serif; font-size: 16px; font-style: italic; color: var(--ink); margin-bottom: 10px; }
+.ciro-sig    { text-align: right; border-top: 1px solid var(--border); padding-top: 7px; font-size: 12px; font-weight: 600; }
+.ciro-note   { font-size: 10.5px; color: #5a4e44; line-height: 1.65; margin-top: 8px; padding-top: 7px; border-top: 1px dashed var(--border); }
+.ciro-note .warn { color: var(--alert); font-weight: 700; }
+
+.empty-msg { text-align: center; padding: 50px; color: #bbb; font-style: italic; font-size: 13px; }
+
+.live-status {
+  margin-top: 18px; padding: 14px 18px;
+  border: 1px double var(--gold); background: var(--paper-d);
+  font-size: 12.5px; line-height: 1.8; border-radius: 2px;
+  display: none;
+}
+.live-status b { color: var(--gold); }
+.live-status .danger { color: var(--alert); font-weight: 700; }
+
+.back-actions { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Analiz paneli ── */
+.case-panel {
+  width: 100%; max-width: 820px;
+  background: #fff; border-radius: 4px; overflow: hidden;
+  box-shadow: 0 4px 20px var(--shadow);
+}
+.panel-nav { display: flex; background: #f4f1ec; overflow-x: auto; }
+.nav-tab {
+  flex: 1; padding: 18px 12px; text-align: center; cursor: pointer;
+  font-weight: 600; font-size: 12px; color: #888;
+  transition: color .2s, background .2s; white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+.nav-tab:hover { background: #ede9e0; }
+.nav-tab.active { background: #fff; color: var(--ink); border-bottom-color: var(--gold); }
+
+.panel-body { padding: 36px 40px; display: none; font-size: 13.5px; line-height: 1.85; }
+.panel-body.active { display: block; }
+.panel-body h4 { color: var(--gold); margin-bottom: 16px; font-size: 15px; }
+.panel-body p  { margin-bottom: 14px; }
+
+/* Analiz tablosu */
+.analysis-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-top: 8px; }
+.analysis-table th { text-align: left; padding: 9px 14px; font-size: 9px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-lt); background: var(--paper-d); border-bottom: 2px solid var(--border); }
+.analysis-table td { padding: 11px 14px; border-bottom: 1px solid #eeebe4; vertical-align: top; line-height: 1.7; }
+.analysis-table tr:last-child td { border-bottom: none; }
+.analysis-table tr:nth-child(even) td { background: #faf7f2; }
+.analysis-table td:first-child { font-weight: 700; color: var(--gold); white-space: nowrap; width: 28%; }
+.check { color: var(--ok); font-weight: 700; }
+.cross { color: var(--alert); font-weight: 700; }
+.half  { color: #a07050; font-weight: 700; }
+
+/* TTK unsur tablosu */
+.ttk-table { width:100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+.ttk-table th { text-align:left; padding: 8px 12px; font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-lt); background:var(--paper-d); border-bottom:2px solid var(--border); }
+.ttk-table td { padding: 9px 12px; border-bottom: 1px solid #eeebe4; vertical-align:top; }
+.ttk-table tr:last-child td { border-bottom:none; }
+.ttk-table tr:nth-child(even) td { background:#faf7f2; }
+.ttk-table td:first-child { font-weight:600; color:var(--ink); }
+
+/* Ciro referans tablosu */
+.ciro-ref { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
+.ciro-ref th { text-align:left; padding:8px 12px; font-size:9px; text-transform:uppercase; letter-spacing:.1em; color:var(--ink-lt); background:var(--paper-d); border-bottom:2px solid var(--border); }
+.ciro-ref td { padding:9px 12px; border-bottom:1px solid #eeebe4; vertical-align:top; line-height:1.65; }
+.ciro-ref tr:last-child td { border-bottom:none; }
+.ciro-ref tr:nth-child(even) td { background:#faf7f2; }
+.ciro-ref td:first-child { font-weight:700; color:var(--gold); white-space:nowrap; }
+.ciro-ref td.alert-cell { color:var(--alert); font-weight:600; }
+
+/* ── Vaka timeline ── */
+.timeline { display: flex; flex-direction: column; gap: 0; margin: 20px 0; position: relative; }
+.timeline::before { content:''; position:absolute; left:18px; top:8px; bottom:8px; width:2px; background:var(--border); }
+.tl-item { display: flex; gap: 18px; align-items: flex-start; padding-bottom: 22px; position: relative; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--gold); background: var(--paper); flex-shrink: 0; margin-top: 2px; position: relative; z-index: 1; }
+.tl-dot.red { border-color: var(--alert); }
+.tl-dot.ok  { background: var(--ok); border-color: var(--ok); }
+.tl-date { font-size: 9.5px; font-weight: 700; color: var(--gold); letter-spacing: .08em; white-space: nowrap; min-width: 82px; padding-top: 1px; }
+.tl-date.red { color: var(--alert); }
+.tl-body { font-size: 12.5px; line-height: 1.7; color: var(--ink); }
+.tl-body b { color: var(--ink); }
+.tl-body .sub { font-size: 11px; color: var(--ink-lt); margin-top: 2px; }
+
+/* ── Argüman blokları ── */
+.arg-section { margin: 22px 0; }
+.arg-heading {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--gold);
+  border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 14px;
+}
+.arg-block {
+  background: var(--paper-d); border-left: 3px solid var(--gold);
+  padding: 13px 16px; border-radius: 0 3px 3px 0;
+  font-size: 12.5px; line-height: 1.8; margin-bottom: 12px;
+}
+.arg-block.alert { border-left-color: var(--alert); background: #fff6f6; }
+.arg-block.ok    { border-left-color: var(--ok); background: #f4faf4; }
+.arg-cite {
+  display: inline-block; font-size: 9.5px; font-weight: 700;
+  letter-spacing: .08em; color: var(--gold);
+  background: var(--paper); border: 1px solid var(--border);
+  border-radius: 2px; padding: 1px 7px; margin-right: 6px; vertical-align: middle;
+}
+.arg-cite.red { color: var(--alert); border-color: #d4b0b0; background: #fff6f6; }
+.verdict {
+  margin-top: 20px; padding: 16px 20px;
+  border: 1.5px double var(--gold); background: var(--paper-d);
+  font-size: 13px; line-height: 1.85; border-radius: 2px;
+}
+.verdict b { color: var(--gold); }
+.verdict .red { color: var(--alert); font-weight: 700; }
+.party-tag {
+  display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; padding: 2px 8px; border-radius: 2px; margin-right: 4px;
+}
+.party-kesideci { background: #e8f0e8; color: var(--ok); border: 1px solid #b8d4b8; }
+.party-lehdar   { background: #f0e8dc; color: var(--gold); border: 1px solid var(--border); }
+.party-hamil    { background: #e8e0f0; color: #5a3a8a; border: 1px solid #c8b8e0; }
+
+/* Versiyon notu */
+.version-note {
+  margin-top: 32px; font-size: 10px; color: var(--ink-lt);
+  letter-spacing: .1em; text-transform: uppercase; opacity: .65;
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .bono-wrap { padding: 28px 20px 24px; }
+  .bono-title { font-size: 26px; }
+  .amt-val { font-size: 20px; }
+  .legal-grid { grid-template-columns: 1fr; }
+  .addr-cell { grid-column: span 1; }
+  .panel-body { padding: 24px 20px; }
+  .audit-row { flex-direction: column; }
+}
+
+@media print {
+  body { background:#fff; padding:0; }
+  .bono-wrap, .case-panel { box-shadow:none; }
+  .audit-panel { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<!-- ── Denetim Paneli ── -->
+<div class="audit-panel">
+  <div class="audit-title">Hukuki Geçerlilik ve Tedavül Denetimi — TTK Md. 776</div>
+
+  <div class="audit-row">
+    <button id="btnBono" class="btn active" onclick="audit('bono',this)">Bono İbaresi</button>
+    <button id="btnVaat" class="btn active" onclick="audit('vaat',this)">Kayıtsız Şartsız Vaat</button>
+    <button id="btnImza" class="btn active" onclick="audit('imza',this)">Keşideci İmzası</button>
+    <button id="btnChain" class="btn btn-danger" onclick="toggleChain()">Zinciri Kopar</button>
+  </div>
+
+  <div class="audit-row">
+    <button class="btn" onclick="showSide('front')">Ön Yüz (Bono)</button>
+    <button class="btn" onclick="showSide('back')">Arka Yüz (Ciro)</button>
+    <select id="ciroSelect" class="btn">
+      <option value="tam">Tam Ciro (Temlik)</option>
+      <option value="beyaz">Beyaz Ciro</option>
+      <option value="tahsil">Tahsil Cirosu</option>
+      <option value="rehin">Rehin Cirosu</option>
+      <option value="gecikmis">Gecikmiş Ciro</option>
+    </select>
+    <button class="btn btn-dark" onclick="executeCiro()">Ciro İşlemini Yap</button>
+  </div>
+
+  <div class="audit-row">
+    <button class="btn btn-reset" onclick="resetSim()">Tüm İşlemleri Sıfırla</button>
+  </div>
+</div>
+
+<!-- ── Bono Belgesi ── -->
+<div class="bono-wrap" id="bonoMain">
+  <div id="validityTag" class="validity-tag tag-valid">Geçerli Kambiyo Senedi</div>
+  <div class="watermark" id="sideText">BONO</div>
+  <div class="protest-stamp" id="protestStamp">PROTESTO EDİLMİŞTİR</div>
+  <div class="corner c-tl"></div><div class="corner c-tr"></div>
+  <div class="corner c-bl"></div><div class="corner c-br"></div>
+
+  <!-- ÖN YÜZ -->
+  <div id="front" class="bono-content active">
+    <div class="bono-header">
+      <div>
+        <div id="docTitle" class="bono-title">Bono</div>
+        <div id="docSub" class="bono-sub">TTK Madde 776 Uyarınca Emre Yazılı Senet</div>
+      </div>
+      <div class="bono-meta">
+        <small style="color:var(--ink-lt)">Düzenleme Tarihi</small><br>
+        <b>25.04.2026</b><br>
+        <small style="color:var(--alert)">Vade Tarihi</small><br>
+        <b style="color:var(--alert)">25.07.2026</b>
+      </div>
+    </div>
+
+    <div class="amount-row">
+      <div class="currency">₺</div>
+      <div class="amt-val">100.000,00</div>
+    </div>
+    <div class="amt-words"><b>Yazıyla:</b> Yüzbin Türk Lirası</div>
+
+    <div class="legal-grid">
+      <div class="legal-cell">
+        <div class="legal-label">Keşideci (Düzenleyen)</div>
+        <div class="legal-val">Kenan Ateş</div>
+      </div>
+      <div class="legal-cell">
+        <div class="legal-label">Lehdar (Alacaklı)</div>
+        <div class="legal-val">Eren Berkay Gün</div>
+      </div>
+      <div class="addr-cell">
+        <div class="legal-label">Keşideci Adresi (Yerleşim Yeri)</div>
+        <div class="legal-val">Atatürk Cad. No:58 Merkez / Sivas</div>
+      </div>
+      <div class="legal-cell" style="border-top:none;">
+        <div class="legal-label">Ödeme Yeri</div>
+        <div class="legal-val">Sivas</div>
+      </div>
+      <div class="legal-cell" style="border-top:none;">
+        <div class="legal-label">Düzenleme Yeri</div>
+        <div class="legal-val">Merkez / Sivas</div>
+      </div>
+    </div>
+
+    <div id="promiseBody" class="promise-text">
+      İşbu bono mukabilinde <b>Kenan Ateş</b>, yukarıda belirtilen
+      tutarı <b>Eren Berkay Gün</b>'ün emrühavalesine Sivas'ta
+      <b>kayıtsız ve şartsız ödeyeceğini</b> taahhüt eder.
+    </div>
+
+    <div class="sig-section">
+      <div id="sigBox" class="sig-box">
+        <div class="sig-line"></div>
+        <div class="sig-name" id="sigName">Kenan Ateş</div>
+        <div class="sig-label">Düzenleyenin El Yazısı İmzası</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARKA YÜZ -->
+  <div id="back" class="bono-content">
+    <div class="back-header">
+      <div>
+        <div class="back-title">Arka Yüz – Ciro Silsilesi</div>
+        <div class="back-sub">Teşhis Fonksiyonu · TTK Md. 788–791</div>
+      </div>
+      <span id="chainIndicator" style="font-size:10px;font-weight:700;color:var(--ok);letter-spacing:.06em;">ZİNCİR SAĞLAM</span>
+    </div>
+
+    <div id="ciroList" class="ciro-list"></div>
+    <div id="emptyMsg" class="empty-msg">Arka yüz henüz boş — ciro işlemi yapın.</div>
+    <div id="liveStatus" class="live-status"></div>
+
+    <div class="back-actions">
+      <button class="btn btn-dark" onclick="action('ibraz')">Ödeme İçin İbraz Et</button>
+      <button id="btnProtest" class="btn btn-danger" onclick="action('protest')" style="display:none;">Protesto Keşide Et</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Analiz Paneli ── -->
+<div class="case-panel">
+  <div class="panel-nav">
+    <div class="nav-tab active" onclick="showTab('vaka',this)">Vaka Kurgusu</div>
+    <div class="nav-tab" onclick="showTab('analiz',this)">Hukuki Mütalaa</div>
+    <div class="nav-tab" onclick="showTab('ciroref',this)">Ciro Türleri</div>
+    <div class="nav-tab" onclick="showTab('ttklist',this)">TTK Md. 776 Kontrol</div>
+  </div>
+
+  <!-- VAKA KURGUSU -->
+  <div id="vaka" class="panel-body active">
+    <h4>Olay Kurgusu</h4>
+
+    <!-- Taraflar -->
+    <div class="arg-section">
+      <div class="arg-heading">Taraflar</div>
+      <p style="font-size:13px;line-height:1.8;margin-bottom:10px;">
+        <span class="party-tag party-kesideci">Keşideci</span>
+        <b>Kenan Ateş</b> — Sivas'ta küçük ölçekli nakliyecilik faaliyeti yürüten tacir.
+        Filo genişletmek amacıyla ikinci el ticari araç arayışına girmiştir.
+      </p>
+      <p style="font-size:13px;line-height:1.8;margin-bottom:10px;">
+        <span class="party-tag party-lehdar">İlk Lehdar</span>
+        <b>Eren Berkay Gün</b> — Sivas Merkez'de faaliyet gösteren ikinci el ticari araç
+        komisyoncusu. Araçları kendi adına alıp satan tacir niteliğinde olup araçların
+        geçmiş bakım geçmişine vakıf durumdadır.
+      </p>
+      <p style="font-size:13px;line-height:1.8;margin-bottom:10px;">
+        <span class="party-tag party-hamil">Son Hamil</span>
+        <b>Mahir Bilal</b> — Sivas'ta inşaat malzemeleri ticareti yapan tacir.
+        Senedi Arınsu Kürekci'den beyaz ciro yoluyla devralmıştır. Temel borç
+        ilişkisinden (araç satımından) tamamen bağımsız, aralarında farklı bir
+        ticari ilişki nedeniyle senedi edinmiştir.
+      </p>
+    </div>
+
+    <!-- Kronoloji -->
+    <div class="arg-section">
+      <div class="arg-heading">Olaylar Kronolojisi</div>
+      <div class="timeline">
+
+        <div class="tl-item">
+          <div class="tl-dot ok"></div>
+          <div>
+            <div class="tl-date">25.04.2026</div>
+            <div class="tl-body">
+              <b>Satım Sözleşmesi ve Bono Düzenlenmesi.</b>
+              Kenan Ateş, Eren Berkay Gün'den 2019 model Ford Transit marka kamyoneti
+              ₺100.000,00 bedelle satın almıştır. Ödemeyi güvence altına almak için
+              aynı tarihte işbu bonoyu düzenlemiş ve Eren Berkay Gün'e teslim etmiştir.
+              Araç teslim alınmış, görünürde herhangi bir ayıp tespit edilmemiştir.
+              <div class="sub">Temel borç ilişkisi: satım sözleşmesi (TBK Md. 207 vd.)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div>
+            <div class="tl-date">02.05.2026</div>
+            <div class="tl-body">
+              <b>1. Ciro: Eren Berkay Gün → Arınsu Kürekci (Tam Ciro).</b>
+              Eren Berkay Gün, senedi kendi tedarikçisi Arınsu Kürekci'ye olan borcuna
+              mahsuben tam ciro ile devretmiştir. Arınsu Kürekci senedi ticari ilişkileri
+              kapsamında devralmış olup temel borç ilişkisinden habersizdir;
+              <b>iyiniyetli hamildir.</b>
+              <div class="sub">TTK Md. 788 — temlik fonksiyonu aktif; tüm haklar devredildi.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-dot"></div>
+          <div>
+            <div class="tl-date">14.05.2026</div>
+            <div class="tl-body">
+              <b>2. Ciro: Arınsu Kürekci → Mahir Bilal (Beyaz Ciro).</b>
+              Arınsu Kürekci, senedi Mahir Bilal'e beyaz ciro ile devretmiştir. Senet
+              bu aşamada <b>fiilen hamiline yazılı</b> işlev görmektedir. Mahir Bilal, senedi
+              Kürekci ile olan emtia alacağına karşılık edinmiş; araç satımıyla hiçbir
+              bağlantısı bulunmamaktadır. <b>İyiniyetli hamildir.</b>
+              <div class="sub">TTK Md. 789 — beyaz ciro; hamiline senet etkisi.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-dot red"></div>
+          <div>
+            <div class="tl-date red">10.06.2026</div>
+            <div class="tl-body">
+              <b>Gizli Ayıbın Ortaya Çıkması.</b>
+              Araç satın alınmasından yaklaşık 6 hafta sonra motor bloğunda çatlak
+              tespit edilmiştir. Ekspertiz raporuna göre çatlak, satım tarihinden önce
+              mevcut olup yüksek motor ısısı nedeniyle gizli kalmış; <b>Eren Berkay Gün'ün
+              bu ayıptan haberdar olduğu</b> ve kasıtlı olarak gizlediği ileri sürülmektedir.
+              Kenan Ateş, TBK Md. 223 uyarınca <b>gizli ayıp ihbarında bulunmuş</b> ve
+              senet bedelini ödemeyi reddetmiştir.
+              <div class="sub">Ayıp: Gizli — kasıtlı gizleme iddiası (TBK Md. 221/2).</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-dot red"></div>
+          <div>
+            <div class="tl-date red">25.07.2026</div>
+            <div class="tl-body">
+              <b>Vade — İbraz ve Red.</b>
+              Son hamil Mahir Bilal, vade günü Sivas'ta ödeme için ibraz etmiştir.
+              Kenan Ateş; araçtaki gizli ayıp gerekçesiyle ödemeyi reddetmiştir.
+              <div class="sub">TTK Md. 714 — ödememe halinde protesto hakkı doğdu.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tl-item">
+          <div class="tl-dot red"></div>
+          <div>
+            <div class="tl-date red">27.07.2026</div>
+            <div class="tl-body">
+              <b>Ödememe Protestosu Keşidesi.</b>
+              Mahir Bilal, vadeden itibaren 2 iş günü içinde Sivas Noterliği'nde
+              ödememe protestosu keşide etmiştir. Müracaat hakları hukuken doğmuştur.
+              <div class="sub">TTK Md. 720 — süre şartı yerine getirildi; cirantalar sorumlu.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Hukuki Gerilim -->
+    <div class="arg-section">
+      <div class="arg-heading">Temel Hukuki Gerilim</div>
+      <div class="arg-block alert">
+        Kenan Ateş, <b>satım sözleşmesinden doğan kişisel def'isini</b> (gizli ayıp)
+        son hamil Mahir Bilal'e karşı ileri sürerek ödemeyi reddetmektedir.
+        Oysa Mahir Bilal, temel borç ilişkisinden tamamen bağımsız, iyiniyetli
+        bir üçüncü kişidir. <b>Kambiyo hukukunun soyutluk ilkesi</b> bu def'in
+        hamiline karşı kullanılmasının önündedir. Çözüm, TTK Md. 687'nin
+        uygulama koşullarının tartışılmasına bağlıdır.
+      </div>
+    </div>
+  </div>
+
+  <!-- HUKUKİ MÜTALAA -->
+  <div id="analiz" class="panel-body">
+    <h4>Hukuki Mütalaa</h4>
+
+    <!-- I. Soyutluk -->
+    <div class="arg-section">
+      <div class="arg-heading">I. Kambiyo Senedinin Soyutluğu İlkesi</div>
+      <div class="arg-block">
+        <span class="arg-cite">TTK Md. 776</span>
+        Bono, düzenlendiği anda temel borç ilişkisinden (satım, kira, kredi vb.)
+        <b>hukuken kopar</b> ve bağımsız bir ödeme yükümlülüğüne dönüşür.
+        Kenan Ateş, senet bedelini ödeme borcunu satım akdine değil; bizzat
+        imzaladığı bonoya dayandırmaktadır. Bu soyutluk, senedin tedavül
+        güvenliğinin ve ticari işlevinin temelidir.
+      </div>
+      <div class="arg-block">
+        Soyutluk ilkesinin pratik sonucu şudur: Kenan Ateş'in Eren Berkay Gün'e
+        karşı sahip olduğu <b>ayıp def'i</b>, bir kişisel def'i niteliğindedir ve
+        yalnızca temel ilişkinin tarafına (Eren Berkay Gün'e) karşı
+        ileri sürülebilir. Senet el değiştirdikçe bu def'in kapsamı
+        TTK Md. 687 çerçevesinde değerlendirilmek zorundadır.
+      </div>
+    </div>
+
+    <!-- II. Def'i Engeli -->
+    <div class="arg-section">
+      <div class="arg-heading">II. Def'i Engeli — TTK Md. 687 Analizi</div>
+
+      <div class="arg-block ok">
+        <span class="arg-cite">TTK Md. 687/1 — Kural</span>
+        "Borçlu, senedi elinde bulunduran kişiye karşı, keşideci veya önceki
+        hamillerden biriyle kendi arasındaki ilişkilere dayanan def'ileri
+        ileri süremez." Hükmün koruma amacı açıktır: iyiniyetle senedi
+        devralan üçüncü kişi, kendisine yabancı borç ilişkilerinin riskini
+        üstlenmemeli; aksi hâlde senetler tedavül güvencesini yitirir.
+      </div>
+
+      <div class="arg-block alert">
+        <span class="arg-cite red">TTK Md. 687/2 — İstisna</span>
+        Ancak borçlu, <b>hamilin senedi devralırken bilerek borçlunun zararına
+        hareket ettiğini ispat ederse</b> kişisel def'ileri ona karşı da
+        ileri sürebilir. Bu "kötüniyet istisnası"nın uygulanabilmesi için
+        salt bilgi (bilmek) yeterli değildir; <b>borçluya zarar verme
+        kastıyla hareket etmek</b> aranmaktadır.
+      </div>
+
+      <div class="arg-block">
+        <span class="arg-cite">Somut Olay Uygulaması</span>
+        Mahir Bilal, senedi <b>Arınsu Kürekci'den</b> beyaz ciro yoluyla devralmıştır.
+        Bilal'in, Kenan Ateş ile Eren Berkay Gün arasındaki araç satımından,
+        dolayısıyla ileri sürülen ayıptan haberdar olduğuna dair herhangi bir
+        delil bulunmamaktadır. Mahir Bilal'in senedi yalnızca kendi ticari
+        alacağına mahsuben edindiği anlaşılmaktadır.
+        <b>Kötüniyet istisnasının koşulları oluşmamıştır.</b>
+      </div>
+    </div>
+
+    <!-- III. Ciro Zinciri Değerlendirmesi -->
+    <div class="arg-section">
+      <div class="arg-heading">III. Ciro Zinciri ve Teşhis Fonksiyonu</div>
+      <div class="arg-block">
+        <span class="arg-cite">TTK Md. 688</span>
+        Senet iki aşamalı tam/beyaz ciroyla Mahir Bilal'e geçmiştir. Zincir
+        kesintisizdir; Bilal'in hamil sıfatı tartışmasızdır. Beyaz ciro aşamasında
+        senet fiilen hamiline yazılı işlev görmüş olsa da bu durum, önceki
+        cirantaların sorumluluğunu ortadan kaldırmaz (TTK Md. 789/2).
+      </div>
+    </div>
+
+    <!-- IV. Protesto ve Müracaat -->
+    <div class="arg-section">
+      <div class="arg-heading">IV. Protesto ve Müracaat Hakkının Doğumu</div>
+      <div class="arg-block">
+        <span class="arg-cite">TTK Md. 714, 720</span>
+        Mahir Bilal, vade günü (25.07.2026) ibraz etmiş; ödeme reddedilmiştir.
+        Protesto vadeden itibaren <b>2 iş günü içinde</b> (27.07.2026)
+        Sivas Noterliği'nde keşide edilmiştir. Süre şartı yerine getirilmiştir.
+        Mahir Bilal'in <b>Arınsu Kürekci'ye ve Eren Berkay Gün'e</b> (ciranta sıfatıyla)
+        müracaat hakkı doğmuştur.
+      </div>
+      <div class="arg-block">
+        <span class="arg-cite">TTK Md. 713 vd.</span>
+        Müracaat sorumluluğu <b>müteselsil</b> niteliktedir: Mahil Bilal dilediği
+        cirantaya ya da keşideciye ayrı ayrı veya birlikte başvurabilir.
+        Ciranta Arınsu Kürekci, rücu hakkını kullanarak Eren Berkay Gün'e
+        dönebilir. Kenan Ateş'in asıl muhatap sorumluluğu ise devam etmektedir;
+        def'i engeli nedeniyle Bilal'e ödeme yapmaktan kurtulamayacaktır.
+      </div>
+    </div>
+
+    <!-- Sonuç -->
+    <div class="verdict">
+      <b>Sonuç ve Değerlendirme</b><br><br>
+      Mahil Bilal'in iyiniyetli hamil sıfatı sabit olup TTK Md. 687/2'nin
+      kötüniyet istisnası somut olayda uygulanamaz. Bu durumda
+      <b>Kenan Ateş, ayıp def'ini Mahir Bilal'e karşı ileri süremez</b>
+      ve senet bedelini ödemekle yükümlüdür.<br><br>
+      Kenan Ateş'in hukuki çaresi farklı bir zemine taşınmalıdır:
+      <span class="red">TBK Md. 219 vd. kapsamında</span> satıcı Eren Berkay Gün'e
+      karşı <b>ayıptan doğan sorumluluk davası</b> açılabilir. Özellikle gizli
+      ayıbı bilerek gizleme iddiası (TBK Md. 221/2) ispat edilebilirse
+      sözleşmeden dönme ya da bedel tenzili talep edilebilir. Kambiyo
+      senedinin ödenmesi ile satıcıya karşı açılacak dava <b>birbirini
+      dışlamaz; paralel yürütülmelidir.</b>
+    </div>
+
+    <!-- Özet tablo -->
+    <div style="margin-top:28px;">
+      <div class="arg-heading">Özet Değerlendirme Tablosu</div>
+      <table class="analysis-table">
+        <thead>
+          <tr><th>Mesele</th><th>TTK Dayanağı</th><th>Sonuç</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Kambiyo Geçerliliği</td>
+            <td>Md. 776</td>
+            <td>Tüm zorunlu unsurlar mevcut; senet geçerli kambiyo senedidir.</td>
+          </tr>
+          <tr>
+            <td>Soyutluk İlkesi</td>
+            <td>Md. 776 vd.</td>
+            <td>Bono temel ilişkiden bağımsızdır; ayıp def'i doğrudan hamiline yöneltilemez.</td>
+          </tr>
+          <tr>
+            <td>Def'i Engeli — Kural</td>
+            <td>Md. 687/1</td>
+            <td>Kişisel def'iler iyiniyetli hamiline karşı ileri sürülemez.</td>
+          </tr>
+          <tr>
+            <td>Def'i Engeli — İstisna</td>
+            <td>Md. 687/2</td>
+            <td>Hamilin <b>bilerek borçlunun zararına hareket ettiği</b> ispat edilirse def'i ileri sürülebilir. Somut olayda koşullar oluşmamıştır.</td>
+          </tr>
+          <tr>
+            <td>Ciro Zinciri</td>
+            <td>Md. 688</td>
+            <td>Kesintisiz; Mahir Bilal'in hamil sıfatı tartışmasızdır.</td>
+          </tr>
+          <tr>
+            <td>Protesto</td>
+            <td>Md. 714, 720</td>
+            <td>Süresinde keşide edildi; müracaat hakkı doğdu.</td>
+          </tr>
+          <tr>
+            <td>Müracaat Sorumluluğu</td>
+            <td>Md. 713 vd.</td>
+            <td>Müteselsil sorumluluk; Bilal tüm cirantalara başvurabilir.</td>
+          </tr>
+          <tr>
+            <td>Kenan Ateş'in Hukuki Çaresi</td>
+            <td>TBK Md. 219 vd.</td>
+            <td>Satıcıya karşı ayıptan sorumluluk davası — kambiyo yükümlülüğünden bağımsız yürütülmeli.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CİRO TÜRÜ REFERANS -->
+  <div id="ciroref" class="panel-body">
+    <h4>Ciro Türleri – Karşılaştırmalı Tablo</h4>
+    <table class="ciro-ref">
+      <thead>
+        <tr>
+          <th>Tür</th><th>Sınıf</th><th>Temlik</th><th>Teşhis</th><th>Teminat</th><th>Temel Sonuç</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tam Ciro</td><td>Şekil</td>
+          <td class="check">✔</td><td class="check">✔</td><td class="check">✔</td>
+          <td>Lehdar açık; tam devir.</td>
+        </tr>
+        <tr>
+          <td>Beyaz Ciro</td><td>Şekil</td>
+          <td class="check">✔</td><td class="check">✔</td><td class="check">✔</td>
+          <td>Ad yok; hamiline senet etkisi, serbestçe tedavül.</td>
+        </tr>
+        <tr>
+          <td>Tahsil Cirosu</td><td>Amaç</td>
+          <td class="cross">✘</td><td class="check">✔</td><td class="cross">✘</td>
+          <td>Yalnızca tahsil/temsil yetkisi; mülkiyet geçmez.</td>
+        </tr>
+        <tr>
+          <td>Rehin Cirosu</td><td>Amaç</td>
+          <td class="cross">✘</td><td class="check">✔</td><td class="check">✔</td>
+          <td>Borca teminat; mülkiyet devredilmez.</td>
+        </tr>
+        <tr>
+          <td>Gecikmiş Ciro</td><td>Zaman</td>
+          <td class="half">~</td><td class="cross">✘</td><td class="cross">✘</td>
+          <td class="alert-cell">Alacağın temliki hükmü; kişisel def'iler ileri sürülür.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TTK MD. 776 KONTROL LİSTESİ -->
+  <div id="ttklist" class="panel-body">
+    <h4>TTK Md. 776 Zorunlu Unsur Kontrol Listesi</h4>
+    <table class="ttk-table">
+      <thead>
+        <tr><th>Unsur</th><th>Madde</th><th>Bu Senette</th><th>Açıklama</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>"Bono" İbaresi</td><td>776/1-a</td><td class="check">✔ Mevcut</td><td>Başlıkta ve metinde açıkça yer alır.</td></tr>
+        <tr><td>Kayıtsız Şartsız Muayyen Bedel Ödeme Vaadi</td><td>776/1-b</td><td class="check">✔ Mevcut</td><td>"Kayıtsız ve şartsız ödeyeceğini taahhüt eder." — muayyen bedel (₺100.000,00) bu fıkranın zorunlu parçasıdır.</td></tr>
+        <tr><td>Belirli Bir Bedel (Yazıyla)</td><td>Ticari Standart</td><td class="check">✔ Eklendi</td><td>"Yüzbin Türk Lirası" — TTK zorunlu unsuru değil; çift kontrol için ticari kullanım standardıdır.</td></tr>
+        <tr><td>Vade</td><td>776/1-c</td><td class="check">✔ Mevcut</td><td>25.07.2026 — muayyen gün vadeli.</td></tr>
+        <tr><td>Ödeme Yeri</td><td>776/1-d</td><td class="check">✔ Mevcut</td><td>Sivas.</td></tr>
+        <tr><td>Lehdar Adı</td><td>776/1-e</td><td class="check">✔ Mevcut</td><td>Eren Berkay Gün.</td></tr>
+        <tr><td>Düzenleme Tarihi ve Yeri</td><td>776/1-f</td><td class="check">✔ Mevcut</td><td>25.04.2026 — Merkez / Sivas. Tarih ve yer tek fıkrada birlikte zorunludur.</td></tr>
+        <tr><td>Keşideci İmzası</td><td>776/1-g</td><td class="half">~ Simüle</td><td>Gerçek kullanımda ıslak imza zorunludur. "Kenan Ateş" gösterimi simüle değerdir.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="version-note">2026, Kenan Ateş</div>
+
+<script>
+  // ── Durum ──
+  let holders   = ["Eren Berkay Gün"];
+  const pool    = ["Arınsu Kürekci","Mahir Bilal","İlknur Döner","Enes Tunç","Yaren Kazık"];
+  let count     = 0;
+  let isBroken  = false;
+  let ibrazDone = false;
+  let auditState = { bono: true, vaat: true, imza: true };
+
+  // ── Toast bildirimi ──
+  let toastTimer;
+  function showToast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show' + (type ? ' toast-'+type : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  // ── Geçerlilik denetimi ──
+  function audit(type, btn) {
+    auditState[type] = !auditState[type];
+    btn.classList.toggle('active');
+    updateValidity();
+    const labels = { bono:'Bono ibaresi', vaat:'Kayıtsız şartsız vaat', imza:'Keşideci imzası' };
+    showToast(
+      labels[type] + (auditState[type] ? ' eklendi — geçerli.' : ' kaldırıldı — kambiyo vasfı sorgulanıyor.'),
+      auditState[type] ? 'ok' : 'warn'
+    );
+  }
+
+  function updateValidity() {
+    const tag  = document.getElementById('validityTag');
+    const wrap = document.getElementById('bonoMain');
+
+    document.getElementById('docTitle').innerText = auditState.bono ? "Bono" : "Senet";
+    document.getElementById('docSub').innerText   = auditState.bono
+      ? "TTK Madde 776 Uyarınca Emre Yazılı Senet"
+      : "Adi Alacak Belgesi – Kambiyo Vasfı Yok";
+
+    document.getElementById('promiseBody').innerHTML = auditState.vaat
+      ? 'İşbu bono mukabilinde <b>Kenan Ateş</b>, yukarıda belirtilen tutarı <b>Eren Berkay Gün</b>\'ün emrühavalesine Sivas\'ta <b>kayıtsız ve şartsız ödeyeceğini</b> taahhüt eder.'
+      : 'Kenan Ateş, bu tutarı Eren\'e <i>belirli şartlar dahilinde</i> ödemeyi kabul etmektedir. <span style="color:var(--alert);font-size:12px;">[Şarta bağlı ifade — kambiyo vasfını ortadan kaldırır]</span>';
+
+    document.getElementById('sigBox').style.opacity = auditState.imza ? "1" : "0";
+
+    const valid = auditState.bono && auditState.vaat && auditState.imza;
+    tag.innerText   = valid ? "Geçerli Kambiyo Senedi" : "Kambiyo Vasfı Yok (Adi Senet)";
+    tag.className   = "validity-tag " + (valid ? "tag-valid" : "tag-invalid");
+    wrap.style.background = valid ? "var(--paper)" : "#f0eeeb";
+  }
+
+  // ── Zincir kopukluk ──
+  function toggleChain() {
+    isBroken = !isBroken;
+    document.getElementById('btnChain').classList.toggle('active');
+    showToast(
+      isBroken ? 'Sonraki ciro zincir dışı şahıstan yapılacak.' : 'Zincir kopukluk iptal edildi.',
+      isBroken ? 'warn' : ''
+    );
+  }
+
+  // ── Yüz değiştirme ──
+  function showSide(side) {
+    document.getElementById('front').classList.remove('active');
+    document.getElementById('back').classList.remove('active');
+    document.getElementById(side).classList.add('active');
+    document.getElementById('sideText').innerText = side === 'front' ? 'BONO' : 'CİRO';
+  }
+
+  // ── Ciro işlemi ──
+  function executeCiro() {
+    const type = document.getElementById('ciroSelect').value;
+
+    // Gecikmiş ciro yalnızca protesto keşide edildikten sonra mümkündür
+    if (type === 'gecikmis' && !ibrazDone) {
+      showToast('Gecikmiş ciro için önce ibraz → protesto akışı tamamlanmalıdır. (TTK Md. 791/3)', 'warn');
+      return;
+    }
+
+    const list = document.getElementById('ciroList');
+    document.getElementById('emptyMsg').style.display = 'none';
+
+    let from = holders[holders.length - 1];
+    let to   = pool[count % pool.length];
+    let broken = false;
+
+    if (isBroken) {
+      from   = "Zincir Dışı Şahıs (Kopukluk Simülasyonu)";
+      broken = true;
+      isBroken = false;
+      document.getElementById('btnChain').classList.remove('active');
+    }
+
+    const META = {
+      tam:      { label:"Tam Ciro",      tag:"Şekil",  mainTxt: to+"'e ödeyiniz.",            note:"Temlik, Teşhis ve Teminat fonksiyonlarının tamamı aktiftir. Hak sahibi açıkça belirtilmiştir." },
+      beyaz:    { label:"Beyaz Ciro",    tag:"Şekil",  mainTxt: "Emrühavalesine ödeyiniz.",   note:"Lehdar adı boş bırakılmıştır. Senet <b>fiilen hamiline yazılı</b> gibi tedavül eder; kimin elindeyse hak ondadır." },
+      tahsil:   { label:"Tahsil Cirosu", tag:"Amaç",   mainTxt: to+"'e ödeyiniz. <i>(Bedeli tahsil içindir)</i>", note:"Mülkiyet devredilmez. Yalnızca <b>temsil/tahsil yetkisi</b> (Teşhis fonksiyonu) verilir. TTK Md. 789." },
+      rehin:    { label:"Rehin Cirosu",  tag:"Amaç",   mainTxt: to+"'e ödeyiniz. <i>(Bedeli rehindir)</i>",       note:"Senet bir borca teminat sağlar. Temlik fonksiyonu yoktur. TTK Md. 790." },
+      gecikmis: { label:"Gecikmiş Ciro", tag:"Zaman",  mainTxt: to+"'e ödeyiniz.",            note:'<span class="warn">DİKKAT:</span> Protesto tarihinden sonra yapılmıştır. <b>Alacağın Temliki hükmündedir.</b> Kişisel def\'iler ileri sürülebilir. TTK Md. 791/3.' }
+    };
+
+    const m = META[type];
+
+    const div = document.createElement('div');
+    div.className = 'ciro-item' + (broken ? ' ciro-broken' : '') + (type==='gecikmis' ? ' ciro-broken' : '');
+    div.innerHTML = `
+      <div class="ciro-meta">
+        <span class="ciro-num${(broken||type==='gecikmis')?' red':''}">#${count+1} – ${m.label}${broken?' — ZİNCİR KOPUK':''}</span>
+        <span class="ciro-tag">${m.tag} Bakımından</span>
+      </div>
+      <div class="ciro-text">${m.mainTxt}</div>
+      <div class="ciro-sig">${from} (İmza)</div>
+      <div class="ciro-note">${broken ? '<span class="warn">ZİNCİR KOPUK:</span> Teşhis fonksiyonu bozuldu; hamil hak sahipliğini ispat edemez.' : m.note}</div>
+    `;
+    list.appendChild(div);
+    holders.push(to);
+    count++;
+
+    // Zincir göstergesi
+    const ci = document.getElementById('chainIndicator');
+    if (broken || type==='gecikmis') {
+      ci.style.color = 'var(--alert)';
+      ci.textContent = broken ? 'ZİNCİR KOPUK' : 'GECİKMİŞ CİRO';
+    }
+
+    // Durum kutusu
+    const live = document.getElementById('liveStatus');
+    live.style.display = 'block';
+    live.innerHTML = broken
+      ? '<span class="danger">KOPUKLUK TESPİT EDİLDİ:</span> Teşhis fonksiyonu bozuldu. Son hamil hak sahipliğini ispat edemez.'
+      : `<b>Güncel Hukuki Durum:</b> Senet şu an <u>${to}</u> elindedir.<br><b>Son İşlem:</b> ${m.label} — ${m.tag} bakımından.`;
+
+    showToast(`${m.label} tamamlandı → ${broken ? 'Zincir kopuk!' : to}`, broken||type==='gecikmis' ? 'warn' : 'ok');
+    showSide('back');
+  }
+
+  // ── İbraz & Protesto ──
+  function action(mode) {
+    const stamp = document.getElementById('protestStamp');
+    if (mode === 'ibraz') {
+      if (ibrazDone) {
+        showToast('İbraz zaten yapıldı — protesto keşide edebilirsiniz.', 'warn');
+        return;
+      }
+      ibrazDone = true;
+      document.getElementById('btnProtest').style.display = 'inline-block';
+      const live = document.getElementById('liveStatus');
+      live.style.display = 'block';
+      live.innerHTML = `<b>İbraz Sonucu:</b> Keşideci Kenan Ateş ödemeyi reddetti. Araçtaki ayıp gerekçesini öne sürdü.<br><b style="color:var(--alert)">Uyarı:</b> Def'i engeli (TTK Md. 687) gereği bu gerekçe iyiniyetli hamiline karşı <b>ileri sürülemez.</b><br>Protesto için vade gününü veya izleyen <b>2 iş gününü</b> bekleyin.`;
+      showToast('İbraz edildi — keşideci reddetti. Protesto hakkı doğdu.', 'warn');
+    } else {
+      if (!ibrazDone) {
+        showToast('Önce ödeme için ibraz yapılmalıdır. (TTK Md. 714)', 'warn');
+        return;
+      }
+      stamp.classList.add('visible');
+      showSide('front');
+      const live = document.getElementById('liveStatus');
+      live.style.display = 'block';
+      live.innerHTML = `<b>Protesto Keşide Edildi.</b> Cirantalara müracaat hakkı doğdu.<br>Bundan sonra yapılacak cirolar <b>gecikmiş ciro</b> hükmündedir — alacağın temliki olarak işler. (TTK Md. 791/3)`;
+      showToast('Ödememe protestosu keşide edildi. Müracaat yolu açıldı.', 'warn');
+    }
+  }
+
+  // ── Sıfırla ──
+  function resetSim() {
+    holders   = ["Eren Berkay Gün"];
+    count     = 0;
+    isBroken  = false;
+    ibrazDone = false;
+    auditState = { bono:true, vaat:true, imza:true };
+
+    document.getElementById('ciroList').innerHTML    = '';
+    document.getElementById('emptyMsg').style.display = 'block';
+    document.getElementById('liveStatus').style.display = 'none';
+    document.getElementById('protestStamp').classList.remove('visible');
+    document.getElementById('btnProtest').style.display = 'none';
+    document.getElementById('chainIndicator').style.color = 'var(--ok)';
+    document.getElementById('chainIndicator').textContent = 'ZİNCİR SAĞLAM';
+    document.getElementById('btnChain').classList.remove('active');
+
+    ['btnBono','btnVaat','btnImza'].forEach(id => document.getElementById(id).classList.add('active'));
+    updateValidity();
+    showSide('front');
+    showToast('Simülatör sıfırlandı.', 'ok');
+  }
+
+  // ── Panel geçişi ──
+  function showTab(id, btn) {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel-body').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(id).classList.add('active');
+  }
+</script>
+</body>
+</html>
